@@ -11,6 +11,13 @@ import com.example.juicetracker.ui.EntryViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 /*
+ In Compose, you build layouts declaratively using Kotlin or Java. You can access different
+ "screens" by navigating to different Composables, typically within the same activity. When
+ building an app with Views, a Fragment that hosts the XML layout replaces the concept of a
+ Composable "screen."
+ */
+
+/*
  The DialogFragment is a Fragment that displays a floating dialog. BottomSheetDialogFragment
  inherits from the DialogFragment class, but displays a sheet the width of the screen pinned
  to the bottom of the screen.
@@ -18,6 +25,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class EntryDialogFragment : BottomSheetDialogFragment() {
 
+    /// onCreateView() function creates the View for this Fragment.
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
