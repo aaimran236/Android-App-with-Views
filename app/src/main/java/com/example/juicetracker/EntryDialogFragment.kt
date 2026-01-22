@@ -1,6 +1,7 @@
 package com.example.juicetracker
 
 import android.R
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -37,7 +38,8 @@ import kotlinx.coroutines.launch
 
 class EntryDialogFragment : BottomSheetDialogFragment() {
     private val entryViewModel by viewModels<EntryViewModel> { AppViewModelProvider.Factory }
-    var selectedColor = JuiceColor.Red.name
+    ///var selectedColor = JuiceColor.Red.name
+    var selectedColor = JuiceColor.Red
 
     /// onCreateView() function creates the View for this Fragment.
     override fun onCreateView(
@@ -49,7 +51,7 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
         return FragmentEntryDialogBinding.inflate(inflater, container, false).root
     }
 
-    private val spinnerColors: List<String> = JuiceColor.entries.map { it.name }
+    ///private val spinnerColors: List<String> = JuiceColor.entries.map { it.name }
 
     /*
     The onViewCreated() method is called after onCreateView() in the lifecycle. The
@@ -58,19 +60,23 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
 
     After you inflate the View binding, you can access and modify the Views in the layout.
      */
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val colorLabelMap = JuiceColor.entries.associateBy { getString(it.label) }
+
         val binding = FragmentEntryDialogBinding.bind(view)
 
         val args: EntryDialogFragmentArgs by navArgs()
         val juiceId = args.itemId
 
-        val adapter = ArrayAdapter(
-            requireContext(),
-            R.layout.simple_spinner_item,
-            spinnerColors
+         binding.colorSpinner.adapter = ArrayAdapter(
+             requireContext(),
+             R.layout.simple_spinner_dropdown_item,
+            ///R.layout.simple_spinner_item,
+            colorLabelMap.map { it.key }
         )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.colorSpinner.adapter = adapter
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//        binding.colorSpinner.adapter = adapter
 
         binding.colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -79,7 +85,9 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
                 position: Int,
                 id: Long
             ) {
-                selectedColor = spinnerColors[position]
+                val selected =parent?.getItemAtPosition(position).toString()
+                ///selectedColor = spinnerColors[position]
+                selectedColor = colorLabelMap[selected] ?: selectedColor
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -92,14 +100,16 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     entryViewModel.getJuiceStream(juiceId)
                         .filterNotNull().collect { juice ->
-                        binding.name.setText(juice.name)
-                        binding.description.setText(juice.description)
+                            binding.name.setText(juice.name)
+                            binding.description.setText(juice.description)
 
-                        val position = spinnerColors.indexOf(juice.color)
-                        binding.colorSpinner.setSelection(position)
+                            ///val position = spinnerColors.indexOf(juice.color)
+                            val position = findColorIndex(juice.color)
+                            binding.colorSpinner.setSelection(position)
 
-                        binding.ratingBar.rating = juice.rating.toFloat()
-                    }
+
+                            binding.ratingBar.rating = juice.rating.toFloat()
+                        }
                 }
             }
         }
@@ -114,7 +124,7 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
                 juiceId,
                 binding.name.text.toString(),
                 binding.description.text.toString(),
-                selectedColor,
+                selectedColor.name,
                 binding.ratingBar.rating.toInt()
             )
 
@@ -126,6 +136,11 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
             ///when cancelButton is clicked dismiss the dialog with the dismiss() method
             dismiss()
         }
+    }
+
+    private fun findColorIndex(color: String): Int{
+        val juiceColor= JuiceColor.valueOf(color)
+        return JuiceColor.entries.indexOf(juiceColor)
     }
 
 }
