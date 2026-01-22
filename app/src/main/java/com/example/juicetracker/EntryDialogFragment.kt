@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +18,7 @@ import com.example.juicetracker.databinding.FragmentEntryDialogBinding
 import com.example.juicetracker.ui.AppViewModelProvider
 import com.example.juicetracker.ui.EntryViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 
@@ -34,6 +36,7 @@ import kotlinx.coroutines.launch
  */
 
 class EntryDialogFragment : BottomSheetDialogFragment() {
+    private val entryViewModel by viewModels<EntryViewModel> { AppViewModelProvider.Factory }
     var selectedColor = JuiceColor.Red.name
 
     /// onCreateView() function creates the View for this Fragment.
@@ -45,8 +48,6 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
         ///return super.onCreateView(inflater, container, savedInstanceState)
         return FragmentEntryDialogBinding.inflate(inflater, container, false).root
     }
-
-    private val entryViewModel by viewModels<EntryViewModel> { AppViewModelProvider.Factory }
 
     private val spinnerColors: List<String> = JuiceColor.entries.map { it.name }
 
@@ -89,17 +90,23 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
         if (juiceId > 0) {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    entryViewModel.getJuiceStream(juiceId).collect { juice ->
-                        binding.name.setText(juice?.name)
-                        binding.description.setText(juice?.description)
+                    entryViewModel.getJuiceStream(juiceId)
+                        .filterNotNull().collect { juice ->
+                        binding.name.setText(juice.name)
+                        binding.description.setText(juice.description)
 
-                        val position = spinnerColors.indexOf(juice?.color)
+                        val position = spinnerColors.indexOf(juice.color)
                         binding.colorSpinner.setSelection(position)
 
-                        binding.ratingBar.rating = juice?.rating?.toFloat() ?: 0F
+                        binding.ratingBar.rating = juice.rating.toFloat()
                     }
                 }
             }
+        }
+
+        binding.name.doOnTextChanged { _, start, _, count ->
+            // Enable Save button if the current text is longer than 3 characters
+            binding.saveButton.isEnabled = (start+count) > 0
         }
 
         binding.saveButton.setOnClickListener {
