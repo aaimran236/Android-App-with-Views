@@ -63,9 +63,7 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val colorLabelMap = JuiceColor.entries.associateBy { getString(it.label) }
-
         val binding = FragmentEntryDialogBinding.bind(view)
-
         val args: EntryDialogFragmentArgs by navArgs()
         val juiceId = args.itemId
 
@@ -75,8 +73,6 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
             ///R.layout.simple_spinner_item,
             colorLabelMap.map { it.key }
         )
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//        binding.colorSpinner.adapter = adapter
 
         binding.colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -95,7 +91,10 @@ class EntryDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
+        /// the value of juiceId >0 indicate existing item , which we are editing
         if (juiceId > 0) {
+            // Request to edit an existing item, whose id was passed in as an argument.
+            // Retrieve that item and populate the UI with its details
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     entryViewModel.getJuiceStream(juiceId)
